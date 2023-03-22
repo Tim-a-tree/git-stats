@@ -1,91 +1,53 @@
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import styles from './page.module.css'
+"use client";
 
-const inter = Inter({ subsets: ['latin'] })
+import {
+  Button,
+  Container,
+  FormControl,
+  Grid,
+  IconButton,
+  TextField,
+} from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
+import { SetStateAction, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Home() {
+  const searchParam = useSearchParams();
+  const router = useRouter();
+  const [userName, setUserName] = useState("");
+
+  const setFormData = (e: { target: { value: SetStateAction<string> } }) => {
+    setUserName(e.target.value);
+  };
+
+  // sends username to info/[user] page using query params
+  const handleSubmit = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    router.push(`/info/${userName}`);
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <Container>
+        <h1>GitStats</h1>
+        <FormControl onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Enter a GitHub username to search....."
+            id="github_username"
+            onChange={setFormData}
+          />
+          <Button
+            type="submit"
+            color="primary"
+            variant="contained"
+            onClick={handleSubmit}
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className={styles.thirteen}>
-          <Image src="/thirteen.svg" alt="13" width={40} height={31} priority />
-        </div>
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://beta.nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={inter.className}>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p className={inter.className}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+            <SendIcon />
+          </Button>
+        </FormControl>
+      </Container>
+    </>
+  );
 }
