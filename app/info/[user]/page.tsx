@@ -23,14 +23,10 @@ import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import useSWR from "swr";
 import {
-  JSXElementConstructor,
   Key,
-  ReactElement,
-  ReactFragment,
-  ReactPortal,
   SetStateAction,
   Suspense,
-  use,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -67,6 +63,23 @@ const fetcher = (args: string) => {
   return fetch(args).then((res) => res.json());
 };
 
+const calculatePieData = (userPublicEvents: any) => {
+  const eventCount = userPublicEvents.reduce((acc, event) => {
+    const { type } = event;
+    if (type in acc) {
+      acc[type]++;
+    } else {
+      acc[type] = 1;
+    }
+    return acc;
+  }, {});
+  return Object.keys(eventCount).map((key) => ({
+    id: key,
+    label: key,
+    value: eventCount[key],
+  }));
+};
+
 export default function Info({ params }: { params: { user: string } }) {
   const router = useRouter();
   const [userName, setUserName] = useState("");
@@ -80,7 +93,6 @@ export default function Info({ params }: { params: { user: string } }) {
     `https://api.github.com/users/${params.user}/repos`,
     fetcher
   );
-
   const { data: userPublicEvents = [], error: userPublicEventsError } = useSWR(
     `https://api.github.com/users/${params.user}/events/public`,
     fetcher
@@ -89,73 +101,66 @@ export default function Info({ params }: { params: { user: string } }) {
   // creating data using userPublicEvents data
   // count by event type
   const [eventData, setEventData] = useState([]);
-  let pieData = [];
+  const [pieData, setPieData] = useState([]);
 
   useEffect(() => {
-    const eventCount = userPublicEvents.reduce((acc, event) => {
-      const { type } = event;
-      if (type in acc) {
-        acc[type]++;
-      } else {
-        acc[type] = 1;
-      }
-      return acc;
-    }, {});
-    pieData = Object.keys(eventCount).map((key) => ({
-      id: key,
-      label: key,
-      value: eventCount[key],
-    }));
-    setEventData(pieData);
+    if (userPublicEvents) {
+      const data = calculatePieData(userPublicEvents);
+      setPieData(data);
+    }
   }, [userPublicEvents]);
 
-  const MyResponsivePie = ({ data: pieData }) => {
-    return (
-      <ResponsivePie
-        data={pieData}
-        margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
-        innerRadius={0.5}
-        padAngle={0.7}
-        cornerRadius={3}
-        colors={{ scheme: "nivo" }}
-        borderWidth={1}
-        borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
-        radialLabelsSkipAngle={10}
-        radialLabelsTextColor="#333333"
-        radialLabelsLinkColor={{ from: "color" }}
-        sliceLabelsSkipAngle={10}
-        sliceLabelsTextColor="#333333"
-        legends={[
-          {
-            anchor: "bottom",
-            direction: "row",
-            justify: false,
-            translateX: 0,
-            translateY: 56,
-            itemsSpacing: 0,
-            itemWidth: 100,
-            itemHeight: 18,
-            itemTextColor: "#999",
-            itemDirection: "left-to-right",
-            itemOpacity: 1,
-            symbolSize: 18,
-            symbolShape: "circle",
-            symbolBorderColor: "rgba(0, 0, 0, .5)",
-            effects: [
-              {
-                on: "hover",
-                style: {
-                  itemTextColor: "#000",
+  const MyResponsivePie = useCallback(
+    ({ data: pieData }) => {
+      return (
+        <ResponsivePie
+          data={pieData}
+          margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+          innerRadius={0.5}
+          padAngle={0.7}
+          cornerRadius={3}
+          colors={{ scheme: "nivo" }}
+          borderWidth={1}
+          borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
+          radialLabelsSkipAngle={10}
+          radialLabelsTextColor="#333333"
+          radialLabelsLinkColor={{ from: "color" }}
+          sliceLabelsSkipAngle={10}
+          sliceLabelsTextColor="#333333"
+          legends={[
+            {
+              anchor: "bottom",
+              direction: "row",
+              justify: false,
+              translateX: 0,
+              translateY: 56,
+              itemsSpacing: 0,
+              itemWidth: 100,
+              itemHeight: 18,
+              itemTextColor: "#999",
+              itemDirection: "left-to-right",
+              itemOpacity: 1,
+              symbolSize: 18,
+              symbolShape: "circle",
+              symbolBorderColor: "rgba(0, 0, 0, .5)",
+              effects: [
+                {
+                  on: "hover",
+                  style: {
+                    itemTextColor: "#000",
+                  },
                 },
-              },
-            ],
-          },
-        ]}
-      />
-    );
-  };
+              ],
+            },
+          ]}
+        />
+      );
+    },
+    [pieData]
+  );
 
   const [repoLanguage, setRepoLanguage] = useState({});
+
   useEffect(() => {
     // use map to loop through array of repos and use SWR to fetch data
     const promises = userRepo.map((repo: { languages_url: string }) =>
@@ -271,7 +276,7 @@ export default function Info({ params }: { params: { user: string } }) {
                 <Item>Recent 30 Activities Statistic</Item>
                 <Divider />
                 {/* Pie Chart for recent 30 activities */}
-                <MyResponsivePie data={eventData} />
+                {/* <MyResponsivePie data={eventData} /> */}
               </Grid>
               <Grid item xs={4} md={4}>
                 <Item>
